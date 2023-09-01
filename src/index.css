@@ -10,6 +10,18 @@
   --color-red-dark: #e03131;
 }
 
+.box::-webkit-scrollbar {
+  display: none;
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+.list-watched::-webkit-scrollbar {
+  display: none;
+}
+
 * {
   margin: 0;
   padding: 0;
