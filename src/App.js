@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const tempMovieData = [
   {
@@ -50,9 +50,19 @@ const tempWatchedData = [
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
+const KEY = "f50af60c";
+
 export default function App() {
+  // we should not set state or create side effects in render logic -- infinite state calls and component re renders
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
+
+  //use useEffect to create this side effect ie update state in render logic
+  useEffect(function () {
+    fetch(`https://www.omdbapi.com/?apikey=${KEY}&s=devil`)
+      .then((res) => res.json())
+      .then((data) => setMovies(data.Search));
+  }, []); //empty arr only once on mount
 
   return (
     <>
