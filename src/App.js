@@ -54,49 +54,61 @@ const KEY = "f50af60c";
 
 export default function App() {
   // we should not set state or create side effects in render logic -- infinite state calls and component re renders
+  const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setisLoading] = useState(false);
   const [error, setError] = useState("");
-  const query = "devil";
+  // const tempQuery = "devil";
   //use useEffect to create this side effect ie update state in render logic
   //cant use promises functions inside useEffect
-  useEffect(function () {
-    async function fetchMovies() {
-      try {
-        setisLoading(true);
-        const res = await fetch(
-          `https://www.omdbapi.com/?apikey=${KEY}&s=${query}`
-        );
-
-        // handling errors - offline, no movies found with search query
-        if (!res.ok)
-          throw new Error("Something went wrong with fetching the movies!!");
-        const data = await res.json();
-        if (data.Response === "False")
-          throw new Error(
-            "Movie not found ! Try again with a different search query"
+  //effects run after the browser paint, after the render and commit phase
+  useEffect(
+    function () {
+      async function fetchMovies() {
+        try {
+          setisLoading(true);
+          //reset all errors before fetching data again
+          setError("");
+          const res = await fetch(
+            `https://www.omdbapi.com/?apikey=${KEY}&s=${query}`
           );
-        setMovies(data.Search);
-        //console.log(movies); //empty array because async state updation,
-        console.log("Movies", data.Search);
-      } catch (err) {
-        console.log(err.message);
-        setError(err.message);
-      } finally {
-        //whether or not there is an error set loading to false eventually
-        setisLoading(false);
+
+          // handling errors - offline, no movies found with search query
+          if (!res.ok)
+            throw new Error("Something went wrong with fetching the movies!!");
+          const data = await res.json();
+          if (data.Response === "False")
+            throw new Error(
+              "Movie not found ! Try again with a different search query"
+            );
+          setMovies(data.Search);
+          //console.log(movies); //empty array because async state updation,
+          console.log("Movies", data.Search);
+        } catch (err) {
+          console.log(err.message);
+          setError(err.message);
+        } finally {
+          //whether or not there is an error set loading to false eventually
+          setisLoading(false);
+        }
       }
-    }
-    fetchMovies();
-  }, []); //empty arr only once on mount
+      if (!query.length) {
+        setMovies([]);
+        setError("");
+        return; //dont call the fetchMovies function
+      }
+      fetchMovies();
+    },
+    [query]
+  ); //empty arr only once on mount
 
   return (
     <>
       {/* fix prop drilling with component composition using children props */}
       <NavBar>
         <Logo />
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <NumResults movies={movies} />
       </NavBar>
       {/* only MovieList requires state, not main and listbox */}
@@ -148,8 +160,7 @@ function NumResults({ movies }) {
   );
 }
 
-function Search() {
-  const [query, setQuery] = useState("");
+function Search({ query, setQuery }) {
   return (
     <input
       className="search"
@@ -176,28 +187,6 @@ function Box({ children }) {
     </div>
   );
 }
-
-// function WatchedBox() {
-//   const [watched, setWatched] = useState(tempWatchedData);
-//   const [isOpen2, setIsOpen2] = useState(true);
-
-//   return (
-//     <div className="box">
-//       <button
-//         className="btn-toggle"
-//         onClick={() => setIsOpen2((open) => !open)}
-//       >
-//         {isOpen2 ? "–" : "+"}
-//       </button>
-//       {isOpen2 && (
-//         <>
-//           <WatchedSummary watched={watched} />
-//           <WatchedMovieList watched={watched} />
-//         </>
-//       )}
-//     </div>
-//   );
-// }
 
 function MovieList({ movies }) {
   return (
