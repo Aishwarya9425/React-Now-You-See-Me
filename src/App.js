@@ -58,7 +58,7 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [isLoading, setisLoading] = useState(false);
   const [error, setError] = useState("");
-  const query = "aaaa";
+  const query = "devil";
   //use useEffect to create this side effect ie update state in render logic
   //cant use promises functions inside useEffect
   useEffect(function () {
@@ -104,7 +104,7 @@ export default function App() {
         <Box>
           {/* {isLoading ? <Loader /> : <MovieList movies={movies} />} */}
           {isLoading && <Loader />}
-          {isLoading && !error && <MovieList movies={movies} />}
+          {!isLoading && !error && <MovieList movies={movies} />}
           {error && <ErrorMessage error={error} />}
         </Box>
 
