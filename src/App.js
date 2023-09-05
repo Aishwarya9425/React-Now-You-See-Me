@@ -57,20 +57,36 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setisLoading] = useState(false);
-  const query = "devil";
+  const [error, setError] = useState("");
+  const query = "aaaa";
   //use useEffect to create this side effect ie update state in render logic
   //cant use promises functions inside useEffect
   useEffect(function () {
     async function fetchMovies() {
-      setisLoading(true);
-      const res = await fetch(
-        `https://www.omdbapi.com/?apikey=${KEY}&s=${query}`
-      );
-      const data = await res.json();
-      setMovies(data.Search);
-      //console.log(movies); //empty array because async state updation,
-      console.log("Movies", data.Search);
-      setisLoading(false);
+      try {
+        setisLoading(true);
+        const res = await fetch(
+          `https://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+        );
+
+        // handling errors - offline, no movies found with search query
+        if (!res.ok)
+          throw new Error("Something went wrong with fetching the movies!!");
+        const data = await res.json();
+        if (data.Response === "False")
+          throw new Error(
+            "Movie not found ! Try again with a different search query"
+          );
+        setMovies(data.Search);
+        //console.log(movies); //empty array because async state updation,
+        console.log("Movies", data.Search);
+      } catch (err) {
+        console.log(err.message);
+        setError(err.message);
+      } finally {
+        //whether or not there is an error set loading to false eventually
+        setisLoading(false);
+      }
     }
     fetchMovies();
   }, []); //empty arr only once on mount
@@ -85,7 +101,12 @@ export default function App() {
       </NavBar>
       {/* only MovieList requires state, not main and listbox */}
       <Main>
-        <Box>{isLoading ? <Loader /> : <MovieList movies={movies} />}</Box>
+        <Box>
+          {/* {isLoading ? <Loader /> : <MovieList movies={movies} />} */}
+          {isLoading && <Loader />}
+          {isLoading && !error && <MovieList movies={movies} />}
+          {error && <ErrorMessage error={error} />}
+        </Box>
 
         <Box>
           <WatchedSummary watched={watched} />
@@ -97,6 +118,14 @@ export default function App() {
 }
 function Loader() {
   return <p className="loader">Loading... </p>;
+}
+
+function ErrorMessage({ error }) {
+  return (
+    <p className="error">
+      <span>🧟</span> {error}
+    </p>
+  );
 }
 
 function NavBar({ children }) {
