@@ -54,14 +54,25 @@ const KEY = "f50af60c";
 
 export default function App() {
   // we should not set state or create side effects in render logic -- infinite state calls and component re renders
-  const [movies, setMovies] = useState(tempMovieData);
-  const [watched, setWatched] = useState(tempWatchedData);
-
+  const [movies, setMovies] = useState([]);
+  const [watched, setWatched] = useState([]);
+  const [isLoading, setisLoading] = useState(false);
+  const query = "devil";
   //use useEffect to create this side effect ie update state in render logic
+  //cant use promises functions inside useEffect
   useEffect(function () {
-    fetch(`https://www.omdbapi.com/?apikey=${KEY}&s=devil`)
-      .then((res) => res.json())
-      .then((data) => setMovies(data.Search));
+    async function fetchMovies() {
+      setisLoading(true);
+      const res = await fetch(
+        `https://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+      );
+      const data = await res.json();
+      setMovies(data.Search);
+      //console.log(movies); //empty array because async state updation,
+      console.log("Movies", data.Search);
+      setisLoading(false);
+    }
+    fetchMovies();
   }, []); //empty arr only once on mount
 
   return (
@@ -74,9 +85,7 @@ export default function App() {
       </NavBar>
       {/* only MovieList requires state, not main and listbox */}
       <Main>
-        <Box>
-          <MovieList movies={movies} />
-        </Box>
+        <Box>{isLoading ? <Loader /> : <MovieList movies={movies} />}</Box>
 
         <Box>
           <WatchedSummary watched={watched} />
@@ -85,6 +94,9 @@ export default function App() {
       </Main>
     </>
   );
+}
+function Loader() {
+  return <p className="loader">Loading... </p>;
 }
 
 function NavBar({ children }) {
