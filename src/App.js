@@ -84,13 +84,17 @@ export default function App() {
 
   useEffect(
     function () {
+      //abort controller to cleanup fetch api calls
+      const controller = new AbortController();
+
       async function fetchMovies() {
         try {
           setisLoading(true);
           //reset all errors before fetching data again
           setError("");
           const res = await fetch(
-            `https://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+            `https://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
+            { signal: controller.signal }
           );
 
           // handling errors - offline, no movies found with search query
@@ -99,14 +103,19 @@ export default function App() {
           const data = await res.json();
           if (data.Response === "False")
             throw new Error(
-              "Movie not found ! Try again with a different search query"
+              "Movie not found ! Try again with a different movie name"
             );
           setMovies(data.Search);
+          setError("");
           //console.log(movies); //empty array because async state updation,
           console.log("Movies", data.Search);
         } catch (err) {
           console.log(err.message);
           setError(err.message);
+
+          if (err.name !== "AbortError") {
+            setError(err.message);
+          }
         } finally {
           //whether or not there is an error set loading to false eventually
           setisLoading(false);
@@ -118,6 +127,12 @@ export default function App() {
         return; //dont call the fetchMovies function
       }
       fetchMovies();
+
+      //cleanup function
+      return function () {
+        controller.abort();
+        //each keystroke new render - that fetch req is cancelled
+      };
     },
     [query]
   ); //empty arr only once on mount
