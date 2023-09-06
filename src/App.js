@@ -10,10 +10,16 @@ export default function App() {
   // we should not set state or create side effects in render logic -- infinite state calls and component re renders
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
   const [isLoading, setisLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelected] = useState(null);
+
+  //pure function inside useState- executed only once on initial render
+  const [watched, setWatched] = useState(function () {
+    const storedValue = localStorage.getItem("watched");
+    //localstorage is a string
+    return JSON.parse(storedValue);
+  });
   // const tempQuery = "devil";
   //use useEffect to create this side effect ie update state in render logic
   //cant use promises functions inside useEffect
@@ -29,13 +35,23 @@ export default function App() {
 
   function handleAddWatched(movie) {
     setWatched((watched) => [...watched, movie]);
+    //state updating happens asynchronously
+    //localStorage.setItem("watched", JSON.stringify([...watched, movie]));
   }
 
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
 
-  //event handler is the preferred way to handle side effects 
+  //local storage
+  useEffect(
+    function () {
+      localStorage.setItem("watched", JSON.stringify(watched));
+    },
+    [watched]
+  );
+
+  //event handler is the preferred way to handle side effects
   useEffect(
     function () {
       //abort controller to cleanup fetch api calls
