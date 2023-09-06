@@ -286,6 +286,22 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     onAddWatched(newWatchedMovie);
     onCloseMovie();
   }
+
+  //change the title to the currently selected movie
+  useEffect(
+    function () {
+      if (!title) return;
+      document.title = ` Movie |  ${title}`;
+
+      //cleanup function to reset title when we go back after selecting movie
+
+      return function () {
+        document.title = "Now you see me👀🎞️";
+      };
+    },
+    [title]
+  );
+
   useEffect(
     function () {
       async function getMovieDetails() {
