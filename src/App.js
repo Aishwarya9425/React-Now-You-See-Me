@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
+import { useMovies } from "./useMovies";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
@@ -9,10 +10,10 @@ const KEY = "f50af60c";
 export default function App() {
   // we should not set state or create side effects in render logic -- infinite state calls and component re renders
   const [query, setQuery] = useState("");
-  const [movies, setMovies] = useState([]);
-  const [isLoading, setisLoading] = useState(false);
-  const [error, setError] = useState("");
   const [selectedId, setSelected] = useState(null);
+
+  //custom hook
+  const { movies, isLoading, error } = useMovies(query);
 
   //pure function inside useState- executed only once on initial render
   const [watched, setWatched] = useState(function () {
@@ -50,65 +51,6 @@ export default function App() {
     },
     [watched]
   );
-
-  //event handler is the preferred way to handle side effects
-  useEffect(
-    function () {
-      //abort controller to cleanup fetch api calls
-      const controller = new AbortController();
-
-      async function fetchMovies() {
-        try {
-          setisLoading(true);
-          //reset all errors before fetching data again
-          setError("");
-          const res = await fetch(
-            `https://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
-            { signal: controller.signal }
-          );
-
-          // handling errors - offline, no movies found with search query
-          if (!res.ok)
-            throw new Error("Something went wrong with fetching the movies!!");
-          const data = await res.json();
-          if (data.Response === "False")
-            throw new Error(
-              "Movie not found ! Try again with a different movie name"
-            );
-          setMovies(data.Search);
-          setError("");
-          //console.log(movies); //empty array because async state updation,
-          console.log("Movies", data.Search);
-        } catch (err) {
-          console.log(err.message);
-          setError(err.message);
-
-          if (err.name !== "AbortError") {
-            setError(err.message);
-          }
-        } finally {
-          //whether or not there is an error set loading to false eventually
-          setisLoading(false);
-        }
-      }
-      if (!query.length) {
-        setMovies([]);
-        setError("");
-        return; //dont call the fetchMovies function
-      }
-
-      //with new search close the currently displayed movie
-      handleCloseMovie();
-      fetchMovies();
-
-      //cleanup function
-      return function () {
-        controller.abort();
-        //each keystroke new render - that fetch req is cancelled
-      };
-    },
-    [query]
-  ); //empty arr only once on mount
 
   return (
     <>
