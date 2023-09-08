@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 import { useMovies } from "./useMovies";
 import { useLocalStorageState } from "./useLocalStorageState";
+import { useKey } from "./useKey";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
@@ -16,7 +17,7 @@ export default function App() {
   //custom hook
   const { movies, isLoading, error } = useMovies(query);
 
-  const [watched, setWatched] = useLocalStorageState([], "watched")
+  const [watched, setWatched] = useLocalStorageState([], "watched");
 
   //pure function inside useState- executed only once on initial render
   // const [watched, setWatched] = useState(function () {
@@ -46,8 +47,6 @@ export default function App() {
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
-
-
 
   return (
     <>
@@ -127,20 +126,13 @@ function Search({ query, setQuery }) {
   //does not re render the comp when value is updated
   const inputEl = useRef(null);
   //place this on the element
-  useEffect(
-    function () {
-      //when enter key is pressed
-      function callback(e) {
-        if (document.activeElement === inputEl.current) return;
-        if (e.code === "Enter") console.log(inputEl.current);
-        inputEl.current.focus();
-        setQuery(""); //reset query, dont reset when search el is active
-      }
-      document.addEventListener("keydown", callback);
-      return () => document.addEventListener("keydown", callback);
-    },
-    [setQuery]
-  );
+
+  useKey("Enter", function () {
+    if (document.activeElement === inputEl.current) return;
+    inputEl.current.focus();
+    setQuery(""); //reset query, dont reset when search el is active
+  });
+
   return (
     <input
       className="search"
@@ -243,22 +235,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     onCloseMovie();
   }
   //listen to escape key to go back after clicking on movie
-  useEffect(
-    function () {
-      function callback(e) {
-        if (e.code === "Escape") {
-          onCloseMovie();
-          console.log("closing movie now");
-        }
-      }
-      document.addEventListener("keydown", callback);
-
-      return function () {
-        document.removeEventListener("keydown", callback);
-      };
-    },
-    [onCloseMovie]
-  );
+  useKey("Escape", onCloseMovie);
 
   //change the title to the currently selected movie
   useEffect(
