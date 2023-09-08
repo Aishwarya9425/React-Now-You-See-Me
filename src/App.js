@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 import { useMovies } from "./useMovies";
+import { useLocalStorageState } from "./useLocalStorageState";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
@@ -15,12 +16,14 @@ export default function App() {
   //custom hook
   const { movies, isLoading, error } = useMovies(query);
 
+  const [watched, setWatched] = useLocalStorageState([], "watched")
+
   //pure function inside useState- executed only once on initial render
-  const [watched, setWatched] = useState(function () {
-    const storedValue = localStorage.getItem("watched");
-    //localstorage is a string
-    return JSON.parse(storedValue);
-  });
+  // const [watched, setWatched] = useState(function () {
+  //   const storedValue = localStorage.getItem("watched");
+  //   //localstorage is a string
+  //   return JSON.parse(storedValue);
+  // });
   // const tempQuery = "devil";
   //use useEffect to create this side effect ie update state in render logic
   //cant use promises functions inside useEffect
@@ -44,13 +47,7 @@ export default function App() {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
 
-  //local storage
-  useEffect(
-    function () {
-      localStorage.setItem("watched", JSON.stringify(watched));
-    },
-    [watched]
-  );
+
 
   return (
     <>
